@@ -1,0 +1,46 @@
+Overall
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+,0,0,0,57.66,79.59,116.13
+pRegion
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+Coweeta,0,0,0,48.43,65.71,93.93
+Danube,0,0,0,377.17,601.43,1038.54
+Elbe,0.01,0,0,801.84,1356.72,2511.24
+Tagliamento,0,0,0,18.9,23.81,31.22
+pWidth
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+,0,0,0,24.57,31.7,42.75
+pOrderClass
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+1to2,0,0,0,1.88,1.98,2.1
+3to4,0,0,0,54.89,75.43,109.47
+5to6,0,0,0,29.81,39.02,53.51
+7,0,0,0,347.11,552.07,951.15
+pBanks
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+Gradual,0,0,0,17.66,22.18,28.98
+Levee,0,0,0,208.94,319.36,525.22
+Steep,0,0,0,32.72,43.17,59.73
+Terrace,0,0,0,225.66,347.03,574.81
+pGroup
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+PrBeet,0,0,0,6.36,7.28,8.52
+PrSpHu,0,0,0,191.87,282.26,441.42
+PrSpWe,0,0,0,45.4,60.09,83.12
+xRegion
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+Coweeta,0,0,0,24.76,58.6,260.9
+Danube,0.02,0.01,0,73.54,252.38,2336.2
+Elbe,0.12,0.07,0.03,48.78,139.87,877.71
+Tagliamento,0,0,0,12.96,30.26,163.35
+xOrderClass
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+1to2,0,0,0,1.66,2.05,3.38
+3to4,0,0,0,22.83,61.87,426.44
+5to6,0,0,0,19.37,50.57,331.14
+7,0.03,0.01,0,54.13,137.29,613.37
+xGroup
+,Lower CI 50%,50%,Upper CI 50%,Lower CI 10%,10%,Upper CI 10%
+PrBeet,0,0,0,7.34,10.06,15.49
+PrSpHu,0.02,0.01,0.01,67.01,113.33,222.69
+PrSpWe,0,0,0,60.93,190.87,1439.44

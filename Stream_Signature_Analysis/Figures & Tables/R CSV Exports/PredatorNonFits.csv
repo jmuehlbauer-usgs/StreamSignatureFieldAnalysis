@@ -1,0 +1,6 @@
+"OrderClass","Number.of.sites","Number.not.fit","Percent.not.fit","Percent.of.all.non.fit.sites"
+"1to2","10","8","0.8",0.5
+"3to4","11","4","0.3636",0.25
+"5to6","13","2","0.1538",0.125
+"7","12","2","0.1667",0.125
+"Total","46","16","0.3478",1
