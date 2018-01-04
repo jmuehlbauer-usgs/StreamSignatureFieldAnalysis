@@ -166,8 +166,6 @@ mins <- tapply(neo2$AbBiom, neo2$SiteBank, min)
 fits <- list()
 sigs <- as.data.frame(names(maxs))
 	colnames(sigs) <- 'SiteBank'
-	sigs$sig10 <- sigs$sig50 <- NA
-sigs2 <- sigs
 fitsbreaks <- breaks
 fitsbreaks[is.na(fitsbreaks)] <- 1e100
 disp <- (summary(P11)$sigma)^2
@@ -175,28 +173,40 @@ for(i in 1:length(maxs)){
 	name <- names(maxs)[i]
 	preF <- fitsbreaks[fitsbreaks$SiteBank == name, 'predpreForest']
 	Wall <- fitsbreaks[fitsbreaks$SiteBank == name, 'predWall']
+	LastBreak <- ifelse((preF != 1e100 & Wall != 1e100 & preF > Wall) | (preF != 1e100 & Wall == 1e100), preF, 0)
 	coefs <- coef(P11)$SiteBank[rownames(coef(P11)$SiteBank) == name,]
 	t1 <- as.data.frame(seq(0, 10000, .1))
 		colnames(t1) <- 'Dist'
 		t1$PostPreF <- ifelse(t1$Dist >= preF, 1, 0)
 		t1$PostWall <- ifelse(t1$Dist >= Wall, 1, 0)
-		t1$Wall <- rep(Wall, dim(t1)[1])		
+		t1$Wall <- rep(Wall, dim(t1)[1])
+		t1$Last <- rep(LastBreak, dim(t1)[1])
 		t1$Int <- as.numeric(rep(coefs[1], dim(t1)[1]))
 		t1$FInt <- as.numeric(rep(coefs[2], dim(t1)[1]))
 		t1$Slp <- as.numeric(rep(coefs[3], dim(t1)[1]))
 		t1$WSlp <- as.numeric(rep(coefs[4], dim(t1)[1]))		
 		t1$logD4 <- ifelse(t1$PostPreF == 1 | t1$PostW ==1, 0, ifelse(t1$Dist == 0, -3, log(t1$Dist)))
 		t1$logW <- suppressWarnings(ifelse(t1$PostWall == 0, 0, ifelse(t1$Dist == t1$Wall, -3, log(t1$Dist - t1$Wall))))
-		t1$logFitAB <- with(t1, Int + FInt * PostPreF + Slp * logD4 + WSlp * logW)
+		t1$logL <- suppressWarnings(ifelse((t1$Last == 0 | t1$PostPreF == 0), 0, ifelse(t1$Dist == t1$Last, -3, log(t1$Dist - t1$Last))))
+		t1$logFitAB <- with(t1, ifelse(Last == 0, Int + FInt * PostPreF + Slp * logD4 + WSlp * logW, Int + FInt * PostPreF + Slp * logD4 + WSlp * logW + WSlp * logL))
 		t1$FitAB <- round(exp(t1$logFitAB + 0.5 * disp), 2)
 			## Note that need to take exp(log(y) + Dispersion/2) to get true estimates (not just exp(log(y))). Dispersion parameter = residual variance, or sigma^2. Can also get from VarCorr
 		t1$FitEf <- round((t1$FitAB - min(t1$FitAB))/ (max(t1$FitAB) - min(t1$FitAB)), 4)		
 	fits[[i]] <- t1[, c('Dist', 'FitAB', 'FitEf')]
-	sigs$sig50[i] <- fits[[i]][min(which(fits[[i]]$FitEf<=.501)), 'Dist']
-	sigs$sig10[i] <- fits[[i]][max(which(fits[[i]]$FitEf>=.099)), 'Dist']
+	sigs$sig50[i] <- fits[[i]][min(which(fits[[i]]$FitEf <= 0.501)), 'Dist']
+	sigs$sig10L[i] <- fits[[i]][min(which(fits[[i]]$FitEf <= 0.101)), 'Dist']
+	sigs$sig10U[i] <- fits[[i]][max(which(fits[[i]]$FitEf >= 0.099)), 'Dist']
 }
 names(fits) <- names(maxs)
 
+###STOPPED HERE.
+	## Adjust individual site signatures to have Wall slopes post-Forest, assuming the Forest is the last break encountered. 
+	## Something is wrong with how sig10L and sig10U are calculated (look at plot of ARZO1LB, for instance--it doesn't match with what sigs is saying). Suggests something is also wrong with how the fit is calculated.
+	## Need to start adding factors.
+	## Need to figure out what to do with getting signatures post-Forest break. Probably just fit a model that uses the Wall slope after those forest breaks. Or take numbers that would have been given for pre-break, and just add the break to them?
+	## Need to incorporate code to get to mega8, above.
+	## Need consolidate "From P drive" folder.
+	
 
 ##### Plot curves for each SiteBank #####
 
@@ -260,13 +270,13 @@ AFn <- tapply(neo2A$Dist, neo2A$SiteBank, length)
 preVpost$AnteForest <- round(c(median(AFmax), mean(AFmax), median(AFn), mean(AFn), length(AFn)), 1)
 	## Roughly 2-3x more samples per site and 2x more sites pre-Forest break than post-Forest break. Median max distance sampled post-Forest break also only 16 m. 
 	## Probably a major reason is just not enough data post-break to justify fitting the distance decay, and many sites don't go far enough to show a decay.
-	## Additionally, however, slope, when modeled above, is very low (near 0). Suggests perhaps decay not as rapid?
+	## Additionally, however, slope, when modeled above, is very low (near 0). Suggests perhaps decay not as rapid? Can't get further at this in a robust fashion though.
 	
 
 ##### Compute overall signatures #####
 
 ## Create and fill dataframe of fitted values
-Overall <- as.data.frame(seq(0, 1000, .1))
+Overall <- as.data.frame(seq(0, 10000, .1))
 	colnames(Overall) <- 'Dist'
 	Overall$logD4 <- ifelse(Overall$Dist == 0, -3, log(Overall$Dist))
 	Overall$logFitAB <- fixef(P11)[1] + fixef(P11)[3] * Overall$logD4
@@ -284,17 +294,10 @@ Overall$FitEfLower <- round((Overall$FitABLower - min(Overall$FitABLower))/ (max
 	Overall$FitEfUpper <- round((Overall$FitABUpper - min(Overall$FitABUpper))/ (max(Overall$FitABUpper) - min(Overall$FitABUpper)), 4)	
 
 ## Get signatures
-OverallSigs <- as.data.frame(round(c(Overall[min(which(Overall$FitEf<=.501)), 'Dist'], Overall[max(which(Overall$FitEf>=.099)), 'Dist']), 1))
+OverallSigs <- as.data.frame(round(c(Overall[min(which(Overall$FitEf <= 0.501)), 'Dist'], Overall[max(which(Overall$FitEf >= 0.099)), 'Dist']), 1))
 	colnames(OverallSigs) <- 'Estimate'
 	rownames(OverallSigs) <- c('Sig50' , 'Sig10')
-	OverallSigs$LowerCI <- round(c(Overall[min(which(Overall$FitEfLower<=.501)), 'Dist'], Overall[max(which(Overall$FitEfLower>=.099)), 'Dist']), 1)
-	OverallSigs$UpperCI <- round(c(Overall[min(which(Overall$FitEfUpper<=.501)), 'Dist'], Overall[max(which(Overall$FitEfUpper>=.099)), 'Dist']), 1)
+	OverallSigs$LowerCI <- round(c(Overall[min(which(Overall$FitEfLower <= 0.501)), 'Dist'], Overall[max(which(Overall$FitEfLower >= 0.099)), 'Dist']), 1)
+	OverallSigs$UpperCI <- round(c(Overall[min(which(Overall$FitEfUpper <= 0.501)), 'Dist'], Overall[max(which(Overall$FitEfUpper >= 0.099)), 'Dist']), 1)
 	## Comparable (same order of magnitude) to estimates from meta-analysis.
 OverallSigs
-
-###STOPPED HERE.
-	## Need to figure out how to best calculate 50% & 10% signatures.
-	## Need to start calculating overall signatures and adding factors.
-	## Need to figure out what to do with getting signatures post-Forest break. Probably just fit a model that uses the Wall slope after those forest breaks. Or take numbers that would have been given for pre-break, and just add the break to them?
-	## Need to incorporate code to get to mega8, above.
-	## Need consolidate "From P drive" folder.
